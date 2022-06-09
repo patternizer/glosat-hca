@@ -35,7 +35,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import seaborn as sns; sns.set()
-mport cartopy
+import cartopy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
@@ -49,12 +49,12 @@ import matplotlib.ticker as mticker
 #-----------------------------------------------------------------------------
 
 maxsize = 700
-nclusters = 50
+nclusters = 10
 
 fontsize = 16 
 use_dark_theme = False
 export_pkl = True
-plot_separate_clusters = False
+plot_separate_clusters = True
 if use_dark_theme == True:
     default_color = 'white'
 else:    
@@ -160,7 +160,6 @@ df_temp = pd.read_pickle('DATA/df_temp.pkl', compression='bz2')
 # MASK: stations without lat or lon
 
 stationcode_fails = df_temp[ (np.isnan( df_temp['stationlat'] )) | (np.isnan( df_temp['stationlon'] )) ].stationcode.unique()
-#085997, 099999, 685807, 688607, 967811, 999096, 999099, 999216
 df_temp_nonan = df_temp.drop( df_temp[ (np.isnan( df_temp['stationlat'] )) | (np.isnan( df_temp['stationlon'] )) ].index )
 df_temp = df_temp_nonan.copy()
 

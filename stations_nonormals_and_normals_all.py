@@ -54,13 +54,6 @@ plot_station_locations = True
 show_gridlines = True
 projection = 'mollweide'        
 
-# get natural earth names (http://www.naturalearthdata.com/)
-
-#resolution = '10m'
-#category = 'cultural'
-#name = 'admin_0_countries'
-#shapefilename = shapereader.natural_earth(resolution, category, name)   
-
 #------------------------------------------------------------------------------
 # LOAD: absolute temperatures and normals
 #------------------------------------------------------------------------------
@@ -70,7 +63,6 @@ df_anom_in = pd.read_pickle('DATA/df_anom.pkl', compression='bz2')
 df_normals = pd.read_pickle('DATA/df_normals.pkl', compression='bz2')
 df_temp = df_temp_in.copy()
 df_anom = df_anom_in[df_anom_in['stationcode'].isin(df_normals[df_normals['sourcecode']>1]['stationcode'])]
-#df_temp_in = []; df_anom_in = []; df_normals = []
 
 dt = df_temp.copy() # all stations
 da = df_anom.copy() # anomalies
@@ -110,8 +102,6 @@ if plot_station_locations == True:
     ax = plt.axes(projection=p)    
     ax.set_global()
     ax.stock_img()
-#    ax.coastlines()
-#    ax.add_feature(cartopy.feature.OCEAN, zorder=0, edgecolor=None)    
     if show_gridlines == True:
         ax.gridlines()     
         if projection == 'platecarree':

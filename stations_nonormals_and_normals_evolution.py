@@ -68,12 +68,7 @@ plot_nonormals_stations_world = True
 plot_nonormals_stations_gridcount_world = False
 
 show_gridlines = True
-projection = 'robinson'        
-# get natural earth names (http://www.naturalearthdata.com/)
-#resolution = '10m'
-#category = 'cultural'
-#name = 'admin_0_countries'
-#shapefilename = shapereader.natural_earth(resolution, category, name)   
+projection = 'mollweide'        
 
 #------------------------------------------------------------------------------
 # METHODS
