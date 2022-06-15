@@ -61,10 +61,15 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 fontsize = 16
 
-window = 10
-edges = np.arange( 1781, 2022, step=window)
-
-plot_nonormals_stations_world = True
+window = 10 # decadal
+use_glosat_start = False # ( default = True ) False --> use edge of Pandas = 1678
+if use_glosat_start == True:
+    tstart, tend = 1781, 2022
+else:
+    tstart, tend = 1678, 2022
+edges = np.arange( tstart, tend, step=window)
+    
+plot_nonormals_stations_world = False
 plot_nonormals_stations_gridcount_world = False
 
 show_gridlines = True
@@ -132,17 +137,16 @@ for i in range(len(edges)-1):
     
     t_start = edges[i]
     t_end = edges[i+1]-1
+
+    dt_n = dt[ (dt.year>=t_start) & (dt.year<=t_end) ].stationcode.unique().shape[0]
+    da_n = da[ (da.year>=t_start) & (da.year<=t_end) ].stationcode.unique().shape[0]
+    ds_n = ds[ (ds.year>=t_start) & (ds.year<=t_end) ].stationcode.unique().shape[0]
     
-    dt_lon = dt[ (dt.year>=t_start) & (dt.year<=t_end) ].groupby('stationcode').mean()['stationlon']
-    dt_lat = dt[ (dt.year>=t_start) & (dt.year<=t_end) ].groupby('stationcode').mean()['stationlat']
-    da_lon = da[ (da.year>=t_start) & (da.year<=t_end) ].groupby('stationcode').mean()['stationlon']
-    da_lat = da[ (da.year>=t_start) & (da.year<=t_end) ].groupby('stationcode').mean()['stationlat']    
-    ds_lon = ds[ (ds.year>=t_start) & (ds.year<=t_end) ].groupby('stationcode').mean()['stationlon']
-    ds_lat = ds[ (ds.year>=t_start) & (ds.year<=t_end) ].groupby('stationcode').mean()['stationlat']    
-    
-    n_all.append( len(dt_lon) )
-    n_normals.append( len(da_lon) )
-    n_nonormals.append( len(ds_lon) )
+    n_all.append( dt_n )
+    n_normals.append( da_n )
+    n_nonormals.append( ds_n )
+
+n_nonormals_proportion = np.array( n_nonormals ) / np.array( n_normals )
     
 #==============================================================================
 # PLOTS
@@ -299,17 +303,35 @@ for i in range(len(edges)-1):
 # PLOT: number of short-segment series per time window
 #------------------------------------------------------------------------------
 
+sns.reset_orig()
+
 figstr = 'short-segment-stations-evolution.png'
-titlestr = 'GloSAT.p04: temporal coverage of stations with and without normals'
-                    
-fig  = plt.figure(figsize=(15,10))
-plt.plot(edges[0:-1], n_all, marker='.', ls='-', lw=2, label='all stations')
-plt.plot(edges[0:-1], n_normals, marker='.', ls='-', lw=2, label='with normals')
-plt.plot(edges[0:-1], n_nonormals, marker='.', ls='-', lw=2, label='no normals')
-plt.tick_params(labelsize=fontsize)    
-plt.legend(loc='upper left', fontsize=fontsize)    
-plt.xlabel('Year', fontsize=fontsize)
-plt.ylabel('Number of stations', fontsize=fontsize)
+titlestr = 'GloSAT.p04: decadal coverage of stations with and without normals'
+                        
+fig, ax = plt.subplots(figsize=(15,10))     
+plt.plot(edges[0:-1], n_all, marker='.', ls='-', lw=2, color='black', label='all stations')
+plt.fill_between(edges[0:-1], n_all, color='black', alpha=0.2)
+plt.plot(edges[0:-1], n_normals, marker='.', ls='-', lw=2, color='blue', label='with normals')
+plt.plot(edges[0:-1], n_nonormals, marker='.', ls='-', lw=2, color='red', label='no normals')
+plt.fill_between(edges[0:-1], n_normals, n_all, color='black', alpha=0.1)
+plt.fill_between(edges[0:-1], n_nonormals, n_normals, color='blue', alpha=0.2)
+plt.fill_between(edges[0:-1], n_nonormals, color='red', alpha=0.2)
+ylimits = ax.get_ylim()
+ax.axvline(x=1850, ls='dotted', lw=2, color='black')
+ax.text(1851, ylimits[1]*0.95, 'Start of CRUTEM5.0.1', fontsize=fontsize)
+#plt.yscale('log')
+ax1 = plt.gca()
+ax2 = ax.twinx()
+ax2.plot(edges[0:-1], n_nonormals_proportion, marker='.', ls='-', lw=2, color='green')
+ax2.fill_between(edges[0:-1], n_nonormals_proportion, color='green', alpha=0.2, hatch='///', zorder=2, fc='c')
+ax1.set_xlabel('Year', fontsize=fontsize)
+ax1.set_ylabel('Number of stations', fontsize=fontsize)
+ax1.legend(loc='upper left', fontsize=fontsize)    
+ax1.xaxis.grid(False, which='major')      
+ax1.tick_params(labelsize=fontsize)    
+ax2.set_ylabel('no normals proportion', fontsize=fontsize, color='green')
+ax2.tick_params(labelsize=fontsize, colors='green')    
+ax2.spines['right'].set_color('green')
 plt.title(titlestr, fontsize=fontsize, pad=10)
 plt.savefig(figstr, dpi=300, bbox_inches='tight')
 plt.close('all')
