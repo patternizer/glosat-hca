@@ -49,12 +49,19 @@ import matplotlib.ticker as mticker
 #-----------------------------------------------------------------------------
 
 maxsize = 700
-nclusters = 10
+nclusters = 40
 
 fontsize = 16 
-use_dark_theme = False
 export_pkl = True
-plot_separate_clusters = True
+plot_separate_clusters = True # ( default = True )
+use_ebc = True                # ( default = True ) 
+
+if use_ebc == True:
+    df_temp_file = 'DATA/df_temp_ebc.pkl'
+else:
+    df_temp_file = 'DATA/df_temp.pkl'
+	
+use_dark_theme = False
 if use_dark_theme == True:
     default_color = 'white'
 else:    
@@ -154,8 +161,8 @@ def compute_dendrogram(model, **kwargs):
 #------------------------------------------------------------------------------
 # LOAD: station coords 
 #------------------------------------------------------------------------------
-             
-df_temp = pd.read_pickle('DATA/df_temp.pkl', compression='bz2')  
+                          
+df_temp = pd.read_pickle( df_temp_file, compression='bz2')  
 
 # MASK: stations without lat or lon
 
