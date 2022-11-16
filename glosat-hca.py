@@ -5,8 +5,8 @@
 # PROGRAM: glosat-hca.py
 #------------------------------------------------------------------------------
 #
-# Version 0.3
-# 16 May, 2022
+# Version 0.4
+# 10 November, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -54,12 +54,8 @@ nclusters = 40
 fontsize = 16 
 export_pkl = True
 plot_separate_clusters = True # ( default = True )
-use_ebc = True                # ( default = True ) 
 
-if use_ebc == True:
-    df_temp_file = 'DATA/df_temp_ebc.pkl'
-else:
-    df_temp_file = 'DATA/df_temp.pkl'
+df_temp_file = 'DATA/df_temp_qc.pkl'
 	
 use_dark_theme = False
 if use_dark_theme == True:

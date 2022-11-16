@@ -31,7 +31,10 @@ nclusters = 40
 #------------------------------------------------------------------------------
 
 df_temp_reconstructed = pd.read_pickle('OUT/' + str(nclusters).zfill(2) + '/df_temp_reconstructed.pkl', compression='bz2')
-df_temp = pd.read_pickle('DATA/df_temp.pkl', compression='bz2')
+df_temp = pd.read_pickle('DATA/df_temp_qc.pkl', compression='bz2')
+
+#df_temp_reconstructed = pd.read_pickle('OUT/' + str(nclusters).zfill(2) + '/EBC/df_temp_reconstructed.pkl', compression='bz2')
+#df_temp = pd.read_pickle('DATA/df_temp_ebc.pkl', compression='bz2')
 
 #------------------------------------------------------------------------------
 # ARCHIVE: equality tests

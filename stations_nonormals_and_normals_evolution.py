@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------
 # PROGRAM: stations_nonormals_and_normals_evolution.py
 #------------------------------------------------------------------------------
-# Version 0.1
-# 23 May, 2022
+# Version 0.2
+# 10 November, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -62,18 +62,20 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 fontsize = 16
 
 window = 10 # decadal
-use_glosat_start = False # ( default = True ) False --> use edge of Pandas = 1678
+use_glosat_start = True # ( default = True ) False --> use edge of Pandas = 1678
 if use_glosat_start == True:
     tstart, tend = 1781, 2022
 else:
     tstart, tend = 1678, 2022
 edges = np.arange( tstart, tend, step=window)
     
-plot_nonormals_stations_world = False
-plot_nonormals_stations_gridcount_world = False
+plot_nonormals_stations_world = True
+plot_nonormals_stations_gridcount_world = True
 
 show_gridlines = True
 projection = 'mollweide'        
+
+glosat_version = 'GloSAT.p04c.EBC'
 
 #------------------------------------------------------------------------------
 # METHODS
@@ -116,9 +118,9 @@ def compute_gridded_counts( ds_lon, ds_lat ):
 # LOAD: absolute temperatures and normals
 #------------------------------------------------------------------------------
 
-df_temp_in = pd.read_pickle('DATA/df_temp.pkl', compression='bz2')
-df_anom_in = pd.read_pickle('DATA/df_anom.pkl', compression='bz2')
-df_normals = pd.read_pickle('DATA/df_normals.pkl', compression='bz2')
+df_temp_in = pd.read_pickle('DATA/df_temp_qc.pkl', compression='bz2')
+df_anom_in = pd.read_pickle('DATA/df_anom_qc.pkl', compression='bz2')
+df_normals = pd.read_pickle('DATA/df_normals_qc.pkl', compression='bz2')
 df_temp = df_temp_in.copy()
 df_anom = df_anom_in[df_anom_in['stationcode'].isin(df_normals[df_normals['sourcecode']>1]['stationcode'])]
 
@@ -197,7 +199,7 @@ for i in range(len(edges)-1):
         print('plot_nonormals_station_gridcell_counts ...')
             
         figstr = 'short-segment-stations-gridded-counts-' + str(t_start) + '-' + str(t_end) + '.png'
-        titlestr = 'GloSAT.p04: stations without normals counts (gridded 5x5): ' + str(t_start) + '-' + str(t_end)
+        titlestr = glosat_version + ': stations without normals counts (gridded 5x5): ' + str(t_start) + '-' + str(t_end)
         
         fig  = plt.figure(figsize=(15,10))
         if projection == 'platecarree': p = ccrs.PlateCarree(central_longitude=0); threshold = 0
@@ -258,7 +260,7 @@ for i in range(len(edges)-1):
         print('plot_nonormals_station_locations ...')
             
         figstr = 'short-segment-stations-' + str(t_start) + '-' + str(t_end) + '.png'
-        titlestr = 'GloSAT.p04: stations: ' + str(t_start) + '-' + str(t_end)
+        titlestr = glosat_version + ': stations: ' + str(t_start) + '-' + str(t_end)
         
         fig  = plt.figure(figsize=(15,10))
         if projection == 'platecarree': p = ccrs.PlateCarree(central_longitude=0); threshold = 0
@@ -292,8 +294,8 @@ for i in range(len(edges)-1):
                                          
         plt.scatter(x=ds_lon, y=ds_lat, color="red", s=2, marker='o', alpha=1,
                     transform=ccrs.PlateCarree(), label='N(no normals)='+str(len(ds_lon)) ) 
-#        plt.scatter(x=da_lon, y=da_lat, color="blue", s=2, marker='o', alpha=1,
-#                    transform=ccrs.PlateCarree(), label='N(normals)='+str(len(da_lon)) ) 
+        plt.scatter(x=da_lon, y=da_lat, color="blue", s=2, marker='o', alpha=1,
+                    transform=ccrs.PlateCarree(), label='N(normals)='+str(len(da_lon)) ) 
         plt.legend(loc='lower left', bbox_to_anchor=(0, -0.15), markerscale=6, facecolor='lightgrey', framealpha=1, fontsize=14)    
         plt.title(titlestr, fontsize=fontsize, pad=10)
         plt.savefig(figstr, dpi=300, bbox_inches='tight')
@@ -306,7 +308,7 @@ for i in range(len(edges)-1):
 sns.reset_orig()
 
 figstr = 'short-segment-stations-evolution.png'
-titlestr = 'GloSAT.p04: decadal coverage of stations with and without normals'
+titlestr = glosat_version + ': decadal coverage of stations with and without normals'
                         
 fig, ax = plt.subplots(figsize=(15,10))     
 plt.plot(edges[0:-1], n_all, marker='.', ls='-', lw=2, color='black', label='all stations')

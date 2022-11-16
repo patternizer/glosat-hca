@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #------------------------------------------------------------------------------
-# PROGRAM: stations_nonormals_and_normals_all.py
+# PROGRAM: stations_all.py
 #------------------------------------------------------------------------------
 # Version 0.2
 # 10 November, 2022
@@ -55,7 +55,7 @@ plot_station_locations = True
 show_gridlines = True
 projection = 'mollweide'        
 
-use_dark_theme = False
+use_dark_theme = True
 
 glosat_version = 'GloSAT.p04c.EBC'
 
@@ -163,11 +163,10 @@ if plot_station_locations == True:
             gl.yformatter = LATITUDE_FORMATTER
             gl.xlabel_style = {'size': fontsize}
             gl.ylabel_style = {'size': fontsize}                                   
-    plt.scatter(x=dt_lon, y=dt_lat, color="red", s=2, marker='o', alpha=1,
-                transform=ccrs.PlateCarree(), label='Global: N(no normals)='+str(len(dt['stationcode'].unique()) - len(da['stationcode'].unique()) )) 
-    plt.scatter(x=da_lon, y=da_lat, color="blue", s=2, marker='o', alpha=1,
-                transform=ccrs.PlateCarree(), label='Global: N(normals)='+str(len(da['stationcode'].unique())) ) 
-    plt.legend(loc='lower left', bbox_to_anchor=(0, -0.15), markerscale=6, facecolor='lightgrey', framealpha=1, fontsize=14)    
+    plt.scatter(x=da_lon, y=da_lat, color="red", s=10, marker='o', alpha=0.2, transform=ccrs.PlateCarree(), label='Global: N='+str(len(dt['stationcode'].unique()) - len(da['stationcode'].unique()) )) 
+#    plt.scatter(x=dt_lon, y=dt_lat, color="red", s=2, marker='o', alpha=1, transform=ccrs.PlateCarree(), label='Global: N(no normals)='+str(len(dt['stationcode'].unique()) - len(da['stationcode'].unique()) )) 
+#    plt.scatter(x=da_lon, y=da_lat, color="blue", s=2, marker='o', alpha=1, transform=ccrs.PlateCarree(), label='Global: N(normals)='+str(len(da['stationcode'].unique())) ) 
+#    plt.legend(loc='lower left', bbox_to_anchor=(0, -0.15), markerscale=6, facecolor='lightgrey', framealpha=1, fontsize=14)    
     plt.title(titlestr, fontsize=fontsize, pad=10)
     plt.savefig(figstr, dpi=300, bbox_inches='tight')
     plt.close('all')
