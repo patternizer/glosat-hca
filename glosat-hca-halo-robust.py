@@ -70,7 +70,7 @@ if projection == 'lambertconformal': p = ccrs.LambertConformal(central_longitude
 # SETTINGS
 #-----------------------------------------------------------------------------
 
-maxsize = 700
+maxsize = 400
 nclusters = 40
 
 fontsize = 16 
@@ -245,12 +245,27 @@ for i in range(nclusters):
     dg_external = dg_sorted[ dg_sorted.distance > 1 ].reset_index(drop=True)
 
     nstations_cluster = stationcodes_cluster.shape[0]
-    nstations_halo = int(nstations_cluster/2)
 
-    df_halo = dg_external.iloc[0:nstations_halo,:]
+    # APPLY: halo limiting criteria
+
+    nstations_halo = int(nstations_cluster/2)    
+    if nstations_halo > 100:        
+        Nlimit = nstations_halo
+    else:
+        Nlimit = 100
+    idx_Nlimit = Nlimit
+
+    Dlimit = 900    
+    if dg_external.distance[0] > 900:
+        idx_Dlimit = 0
+    else:        
+        idx_Dlimit = dg_external[dg_external.distance < Dlimit].index[-1]
+
+    idx = np.max([ idx_Nlimit, idx_Dlimit ])
+    
+    df_halo = dg_external.iloc[0:idx,:]
 
     stationcodes_halo = df_halo.stationcode.values
-
     stationcodes_cluster_halo = np.array( list(stationcodes_cluster) + list(stationcodes_halo) )
     
     # SAVE: dataframe of clusters and dataframe of clusters + halos
