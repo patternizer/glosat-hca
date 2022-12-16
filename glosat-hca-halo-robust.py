@@ -5,8 +5,8 @@
 # PROGRAM: glosat-hca-halo-robust.py
 #------------------------------------------------------------------------------
 #
-# Version 0.1
-# 13 December, 2022
+# Version 0.2
+# 16 December, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -248,12 +248,11 @@ for i in range(nclusters):
 
     # APPLY: halo limiting criteria
 
-    nstations_halo = int(nstations_cluster/2)    
-    if nstations_halo > 100:        
-        Nlimit = nstations_halo
+    n_halo = int(nstations_cluster/2)    
+    if n_halo > 100:        
+        idx_Nlimit = n_halo
     else:
-        Nlimit = 100
-    idx_Nlimit = Nlimit
+        idx_Nlimit = 100
 
     Dlimit = 900    
     if dg_external.distance[0] > 900:
@@ -261,9 +260,9 @@ for i in range(nclusters):
     else:        
         idx_Dlimit = dg_external[dg_external.distance < Dlimit].index[-1]
 
-    idx = np.max([ idx_Nlimit, idx_Dlimit ])
+    nstations_halo = np.max([ idx_Nlimit, idx_Dlimit ])
     
-    df_halo = dg_external.iloc[0:idx,:]
+    df_halo = dg_external.iloc[0:nstations_halo,:]
 
     stationcodes_halo = df_halo.stationcode.values
     stationcodes_cluster_halo = np.array( list(stationcodes_cluster) + list(stationcodes_halo) )
@@ -286,7 +285,7 @@ for i in range(nclusters):
     cmap = cm.get_cmap('PiYG', len(np.unique(labels)) ) # discrete colors
     
     figstr = 'global-cluster-halo' + '-' + str(i).zfill(2) + '.png'
-    titlestr = 'HCA: cluster ' + str(i+1).zfill(2) + ' + halo (n clusters=' + str( nclusters ) + ')'
+    titlestr = 'HCA: cluster ' + str(i).zfill(2) + ' + halo (n clusters=' + str( nclusters ) + ')'
                                                                                 
     fig, ax = plt.subplots(figsize=(15,10), subplot_kw=dict(projection=p))
     ax.stock_img()
