@@ -5,8 +5,8 @@
 # PROGRAM: glosat-hca.py
 #------------------------------------------------------------------------------
 #
-# Version 0.4
-# 10 November, 2022
+# Version 0.5
+# 17 December, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -48,12 +48,13 @@ import matplotlib.ticker as mticker
 # SETTINGS
 #-----------------------------------------------------------------------------
 
-maxsize = 700
+#maxsize = 700 # full matrix LEK upper limit
+maxsize = 400
 nclusters = 40
 
 fontsize = 16 
 export_pkl = True
-plot_separate_clusters = True # ( default = True )
+plot_separate_clusters = True # ( default = False )
 
 df_temp_file = 'DATA/df_temp_qc.pkl'
 	
@@ -62,8 +63,7 @@ if use_dark_theme == True:
     default_color = 'white'
 else:    
     default_color = 'black'    	
-cmap = 'nipy_spectral'
- 
+
 #----------------------------------------------------------------------------
 # DARK THEME
 #----------------------------------------------------------------------------
@@ -270,6 +270,9 @@ else:
 # PLOTS
 #==============================================================================
 
+#cmap = cm.get_cmap('nipy_spectral', len(np.unique(labels)) ) # discrete colors
+cmap = cm.get_cmap('PiYG', len(np.unique(labels)) ) # discrete colors
+
 # PLOT: global clusters ( all )
     
 figstr = 'global-clusters-map' + '-' + str(nclusters).zfill(2) + '_' + str(len(dg.cluster.unique())).zfill(2) + '.png'
@@ -281,6 +284,7 @@ p = ccrs.PlateCarree(central_longitude=0)
 ax = plt.axes(projection=p)
 ax.set_global()
 ax.set_extent([-180, 180, -90, 90], crs=p)    
+ax.stock_img()
 gl = ax.gridlines(crs=p, draw_labels=True, linewidth=1, color='black', alpha=0.5, linestyle='-')
 gl.top_labels = False
 gl.right_labels = False
@@ -292,13 +296,12 @@ gl.xformatter = LONGITUDE_FORMATTER
 gl.yformatter = LATITUDE_FORMATTER
 gl.xlabel_style = {'size': fontsize}
 gl.ylabel_style = {'size': fontsize}              
-plt.scatter( x = dg['lon'], y = dg['lat'], c = dg['cluster'], marker='s', s=1, alpha=0.5, transform=ccrs.PlateCarree(), cmap=cmap)  
-ax.stock_img()
+plt.scatter( x = dg['lon'], y = dg['lat'], marker='o', s=3, facecolors='none', c = dg['cluster'], lw=0.5, alpha=1, transform=p, cmap=cmap)  
 cb = plt.colorbar(shrink=0.7, extend='both')    
 cb.set_label(colorbarstr, labelpad=10, fontsize=fontsize)
 cb.ax.tick_params( labelsize=fontsize)
 plt.title( titlestr, fontsize=fontsize )
-plt.savefig( figstr, dpi=300, bbox_inches='tight')
+plt.savefig( figstr, dpi=600, bbox_inches='tight')
 plt.close('all')
 
 if plot_separate_clusters == True:
@@ -319,6 +322,7 @@ if plot_separate_clusters == True:
         ax = plt.axes(projection=p)
         ax.set_global()
         ax.set_extent([-180, 180, -90, 90], crs=p)    
+        ax.stock_img()
         gl = ax.gridlines(crs=p, draw_labels=True, linewidth=1, color='black', alpha=0.5, linestyle='-')
         gl.top_labels = False
         gl.right_labels = False
@@ -330,10 +334,9 @@ if plot_separate_clusters == True:
         gl.yformatter = LATITUDE_FORMATTER
         gl.xlabel_style = {'size': fontsize}
         gl.ylabel_style = {'size': fontsize}              
-        plt.scatter( x = x, y = y, c = c, marker='s', s=5, alpha=0.5, transform=ccrs.PlateCarree(), cmap=cmap)  
-        ax.stock_img()
+        plt.scatter( x = x, y = y, marker='o', s=3, facecolors='none', c = 'blue', lw=0.5, alpha=1, transform=p, cmap=cmap)  
         plt.title( titlestr, fontsize=fontsize )
-        plt.savefig( figstr, dpi=300, bbox_inches='tight')
+        plt.savefig( figstr, dpi=600, bbox_inches='tight')
         plt.close('all')
 
 # PLOT: bar chart of cluster membership
@@ -347,7 +350,7 @@ plt.bar( x=np.arange( 1, len(n)+1 ), height=n )
 plt.fill_between( np.arange( 1, len(n)+1 ), np.nanpercentile( n, 25 ), np.nanpercentile( n, 75 ), color='r', alpha=0.2, label='IQR=' + str( int( np.nanpercentile(n,75) - np.nanpercentile(n,25) ) ) + ' stations/cluster' )
 plt.hlines( xmin=1, xmax=len(n), y=np.nanmedian( n ),  colors='r', label='Median=' + str( int(np.nanmedian(n))) + ' stations/cluster' )
 plt.xlim(0.5, len(n)+0.5)
-plt.ylim(0, 700)
+plt.ylim(0, maxsize)
 plt.legend(loc='upper left', fontsize=fontsize)
 plt.title( titlestr, fontsize=fontsize)
 plt.ylabel("N (stations)", fontsize=fontsize )

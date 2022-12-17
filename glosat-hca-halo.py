@@ -5,8 +5,8 @@
 # PROGRAM: glosat-hca-halo.py
 #------------------------------------------------------------------------------
 #
-# Version 0.1
-# 9 December, 2022
+# Version 0.2
+# 16 December, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -69,11 +69,11 @@ if projection == 'lambertconformal': p = ccrs.LambertConformal(central_longitude
 # SETTINGS
 #-----------------------------------------------------------------------------
 
-maxsize = 1024
-nclusters = 30
+maxsize = 400
+nclusters = 40
 
 fontsize = 16 
-plot_separate_clusters = True # ( default = True )
+plot_halos = True # ( default = False )
 
 df_temp_file = 'DATA/df_temp_qc.pkl'
 	
@@ -186,11 +186,6 @@ X = np.nan_to_num( X )
 model = AgglomerativeClustering( n_clusters = nclusters, affinity="precomputed", linkage='complete', distance_threshold=None, compute_distances=True, compute_full_tree=True ).fit( X )
 labels = model.labels_
 
-# COMPUTE: linkage matrix (Y) for up to 5 levels of the dendrogram
-
-Y = compute_dendrogram( model, truncate_mode="level", p=5 )
-#clusters = cut_tree(linkage_matrix, n_clusters=nclusters)
-
 # COUNT:  number of stations in each cluster
 
 n = [ len( labels[ labels == i ] ) for i in range( nclusters ) ]      
@@ -274,8 +269,7 @@ for i in range(len(dg_centroids)):
     X = prepare_dists( centroid_and_lat_cluster, centroid_and_lon_cluster )
     X = np.nan_to_num( X )
 
-#    outer_station_idx = np.argmax(X[0,:]) - 1
-    outer_station_idx = np.arange( len(X) )[ X[0,:] == np.quantile(X[0,:], 0.5, interpolation='nearest') ][0] - 1
+    outer_station_idx = np.argmax(X[0,:]) - 1
     outer_station_dist = X[0,outer_station_idx+1]
 
     outer_station_lon_delta = np.abs( lon_cluster - lon_centroids[i] )
@@ -290,22 +284,6 @@ for i in range(len(dg_centroids)):
     outer_station_deltas.append( outer_station_delta )
 
 dg_centroids['delta'] = np.array(outer_station_deltas)
-
-'''
-
-# SAVE: dataframe of clusters + halos
-
-# SAVE: separate cluster files
-    
-for i in range(len(n)):
-        
-    cluster_stationcodes = dc[i][1].values            
-    da = df_temp.copy()
-    df_temp_cluster = da[ da["stationcode"].isin( cluster_stationcodes )]        
-    clusterFile = 'df_temp_cluster_' + str(i).zfill(2) + '.pkl'
-    df_temp_cluster.to_pickle( clusterFile, compression='bz2')
-
-'''
     
 #==============================================================================
 # PLOTS
@@ -314,7 +292,6 @@ for i in range(len(n)):
 #cmap = cm.get_cmap('nipy_spectral', len(np.unique(labels)) ) # discrete colors
 cmap = cm.get_cmap('PiYG', len(np.unique(labels)) ) # discrete colors
     
-
 # PLOT: clusters + centroid + outer radius (no halos)
 
 figstr = 'global-clusters-map-no-halos' + '-' + str(nclusters).zfill(2) + '_' + str(len(dg.cluster.unique())).zfill(2) + '.png'
@@ -322,7 +299,7 @@ titlestr = 'HCA: clusters + centroids + outer radii (n clusters=' + str(len(dg.c
 colorbarstr = r'Cluster'
                                                                                 
 fig, ax = plt.subplots(figsize=(15,10), subplot_kw=dict(projection=p))
-#ax.stock_img()
+ax.stock_img()
 #ax.add_feature(cf.COASTLINE, lw=2)
 
 ax.set_global()
@@ -356,69 +333,69 @@ for i in range(len(dg_centroids)):
     else:
         plt.scatter( x = dg_centroids.lon[i], y = dg_centroids.lat[i], c = 'red', marker='x', s=50, alpha=1, zorder=3, transform=p, cmap=cmap)      
 
-plt.scatter( x = dg['lon'], y = dg['lat'], c = dg['cluster'], marker='o', s=3, alpha=1, transform=p, cmap=cmap)      
+plt.scatter( x = dg['lon'], y = dg['lat'], marker='o', s=3, facecolors='none', c=dg['cluster'], lw=0.5, alpha=1, transform=p, cmap=cmap)      
 
 cb = plt.colorbar(shrink=0.7, extend='both')    
 cb.set_label(colorbarstr, labelpad=10, fontsize=fontsize)
 cb.ax.tick_params( labelsize=fontsize)
 plt.title( titlestr, fontsize=fontsize )
-plt.savefig( figstr, dpi=300, bbox_inches='tight')
+plt.savefig( figstr, dpi=600, bbox_inches='tight')
 plt.close('all')
 
 # PLOT: centroid + outer radius + halos
 
-figstr = 'global-clusters-map-halos' + '-' + str(nclusters).zfill(2) + '_' + str(len(dg.cluster.unique())).zfill(2) + '.png'
-titlestr = 'HCA: outer radii + haloes (n clusters=' + str(len(dg.cluster.unique())) + ')'
-colorbarstr = r'Cluster'
-                                                                                
-fig, ax = plt.subplots(figsize=(15,10), subplot_kw=dict(projection=p))
-#ax.stock_img()
-#ax.add_feature(cf.COASTLINE, lw=2)
-
-ax.set_global()
-ax.gridlines()
-ax.set_extent([-180, 180, -90, 90], crs=p)    
-                                   
-gl = ax.gridlines(crs=p, draw_labels=True, linewidth=1, color='black', alpha=0.5, linestyle='-')
-gl.top_labels = False
-gl.right_labels = False
-gl.xlines = True
-gl.ylines = True
-gl.xlocator = mticker.FixedLocator([-120,-60,0,60,120])
-gl.ylocator = mticker.FixedLocator([-60,-30,0,30,60])
-gl.xformatter = LONGITUDE_FORMATTER
-gl.yformatter = LATITUDE_FORMATTER
-gl.xlabel_style = {'size': fontsize}
-gl.ylabel_style = {'size': fontsize}              
-
-for i in range(len(dg_centroids)):
-
-    x = dg_centroids.lon[i]
-    y = dg_centroids.lat[i]
-    r = dg_centroids.delta[i] # degrees
-
-    poly = mpatches.Circle((x,y),1.5*r, color='k', transform=p)
-    ax.add_patch(poly).set_alpha(0.5)
-
-    rgba = cmap(i/len(dg_centroids)) 
-    poly = mpatches.Circle((x,y),r, color=rgba, transform=p)
-    ax.add_patch(poly).set_alpha(0.5)
-
-    if dg_centroids.delta[i] > 0:
-        plt.scatter( x = dg_centroids.lon[i], y = dg_centroids.lat[i], c = 'black', marker='x', s=50, alpha=1, zorder=3, transform=p, cmap=cmap)      
-    else:
-        plt.scatter( x = dg_centroids.lon[i], y = dg_centroids.lat[i], c = 'red', marker='x', s=50, alpha=1, zorder=3, transform=p, cmap=cmap)      
-
-plt.scatter( x = dg['lon'], y = dg['lat'], c = dg['cluster'], marker='o', s=3, alpha=1, transform=p, cmap=cmap) 
-
-cb = plt.colorbar(shrink=0.7, extend='both')    
-cb.set_label(colorbarstr, labelpad=10, fontsize=fontsize)
-cb.ax.tick_params( labelsize=fontsize)
-
-plt.title( titlestr, fontsize=fontsize )
-plt.savefig( figstr, dpi=300, bbox_inches='tight')
-plt.close('all')
-
+if plot_halos == True:
+        
+    figstr = 'global-clusters-map-halos' + '-' + str(nclusters).zfill(2) + '_' + str(len(dg.cluster.unique())).zfill(2) + '.png'
+    titlestr = 'HCA: outer radii + haloes (n clusters=' + str(len(dg.cluster.unique())) + ')'
+    colorbarstr = r'Cluster'
+                                                                                    
+    fig, ax = plt.subplots(figsize=(15,10), subplot_kw=dict(projection=p))
+    ax.stock_img()
+    
+    ax.set_global()
+    ax.gridlines()
+    ax.set_extent([-180, 180, -90, 90], crs=p)    
+                                       
+    gl = ax.gridlines(crs=p, draw_labels=True, linewidth=1, color='black', alpha=0.5, linestyle='-')
+    gl.top_labels = False
+    gl.right_labels = False
+    gl.xlines = True
+    gl.ylines = True
+    gl.xlocator = mticker.FixedLocator([-120,-60,0,60,120])
+    gl.ylocator = mticker.FixedLocator([-60,-30,0,30,60])
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabel_style = {'size': fontsize}
+    gl.ylabel_style = {'size': fontsize}              
+    
+    for i in range(len(dg_centroids)):
+    
+        x = dg_centroids.lon[i]
+        y = dg_centroids.lat[i]
+        r = dg_centroids.delta[i] # degrees
+    
+        poly = mpatches.Circle((x,y),1.5*r, color='k', transform=p)
+        ax.add_patch(poly).set_alpha(0.5)
+    
+        rgba = cmap(i/len(dg_centroids)) 
+        poly = mpatches.Circle((x,y),r, color=rgba, transform=p)
+        ax.add_patch(poly).set_alpha(0.5)
+    
+        if dg_centroids.delta[i] > 0:
+            plt.scatter( x = dg_centroids.lon[i], y = dg_centroids.lat[i], c = 'black', marker='x', s=50, alpha=1, zorder=3, transform=p, cmap=cmap)      
+        else:
+            plt.scatter( x = dg_centroids.lon[i], y = dg_centroids.lat[i], c = 'red', marker='x', s=50, alpha=1, zorder=3, transform=p, cmap=cmap)      
+    
+    plt.scatter( x = dg['lon'], y = dg['lat'], marker='o', s=3, facecolors='none', c=dg['cluster'], lw=0.5, alpha=1, transform=p, cmap=cmap)      
+    
+    cb = plt.colorbar(shrink=0.7, extend='both')    
+    cb.set_label(colorbarstr, labelpad=10, fontsize=fontsize)
+    cb.ax.tick_params( labelsize=fontsize)
+    
+    plt.title( titlestr, fontsize=fontsize )
+    plt.savefig( figstr, dpi=300, bbox_inches='tight')
+    plt.close('all')
 
 #------------------------------------------------------------------------------
 print('** END')
