@@ -46,15 +46,15 @@ import matplotlib.ticker as mticker
 
 fontsize = 16 
 
-cluster_halo_path = 'run-glosat-p04c-ebc-halo/lek-cluster-pkl/'
-cluster_no_halo_path = 'run-glosat-p04c-ebc-no-halo/lek-cluster-pkl/'
+cluster_halo_path = 'OUT/run-glosat-p04c-ebc-halo-v2/lek-cluster-pkl/'
+cluster_no_halo_path = 'OUT/run-glosat-p04c-ebc-no-halo-v2/lek-cluster-pkl/'
 
 #------------------------------------------------------------------------------
 # LOAD: clusters 
 #------------------------------------------------------------------------------
 
-cluster_halo_pkllist = glob.glob( cluster_halo_path + "*.pkl" )
-cluster_no_halo_pkllist = glob.glob( cluster_no_halo_path + "*.pkl" )
+cluster_halo_pkllist = np.sort( glob.glob( cluster_halo_path + "*.pkl" ) )
+cluster_no_halo_pkllist = np.sort( glob.glob( cluster_no_halo_path + "*.pkl" ) )
 
 nclusters = len( cluster_no_halo_pkllist )
 rms_e = []
