@@ -5,8 +5,8 @@
 # PROGRAM: glosat-hca-halo-robust.py
 #------------------------------------------------------------------------------
 #
-# Version 0.2
-# 16 December, 2022
+# Version 0.3
+# 20 December, 2022
 # Michael Taylor
 # https://patternizer.github.io
 # patternizer AT gmail DOT com
@@ -208,6 +208,12 @@ dc = list( df.groupby('cluster')['stationcode'] )
 nstations = len(df)
 nclusters = len(df.cluster.unique())
 
+vec_cluster = []
+vec_halo = []
+vec_idx_Nmin = []
+vec_idx_Nmax = []
+vec_idx_Dlimit = []
+
 for i in range(nclusters):
     
     # EXTRACT: cluster dataframe
@@ -248,32 +254,59 @@ for i in range(nclusters):
 
     # APPLY: halo limiting criteria
 
+    '''
     n_halo = int(nstations_cluster/2)    
     if n_halo > 100:        
         idx_Nlimit = n_halo
     else:
         idx_Nlimit = 100
 
-    Dlimit = 900    
-    if dg_external.distance[0] > 900:
+    Dlimit = 900 # units: km    
+    if dg_external.distance[0] > Dlimit:
         idx_Dlimit = 0
     else:        
         idx_Dlimit = dg_external[dg_external.distance < Dlimit].index[-1]
 
     nstations_halo = np.max([ idx_Nlimit, idx_Dlimit ])
+    '''
+
+    # Specify min and max halo station counts
+
+    idx_Nmin = 100
+    idx_Nmaxtotal = 800
+    idx_Nmax = idx_Nmaxtotal - nstations_cluster
+
+    # Find stations that meet the distance criterion
+    
+    Dlimit = 900 # units: km
+    if dg_external.distance[0] > Dlimit:
+        idx_Dlimit = 0
+    else:        
+        idx_Dlimit = dg_external[dg_external.distance < Dlimit].index[-1]
+
+    # Combine criteria (Nmin plus any that lie within Dlimit up to Nmax)
+
+    nstations_halo = np.max([ idx_Nmin, np.min([ idx_Dlimit, idx_Nmax ]) ])
     
     df_halo = dg_external.iloc[0:nstations_halo,:]
-
     stationcodes_halo = df_halo.stationcode.values
     stationcodes_cluster_halo = np.array( list(stationcodes_cluster) + list(stationcodes_halo) )
+
+    # APPEND: counts
+
+    vec_cluster.append( nstations_cluster )
+    vec_halo.append( nstations_halo )
+    vec_idx_Nmin.append( idx_Nmin ) 
+    vec_idx_Nmax.append( idx_Nmax ) 
+    vec_idx_Dlimit.append( idx_Dlimit ) 
     
     # SAVE: dataframe of clusters and dataframe of clusters + halos
                     
     da = df_temp.copy()
     df_temp_cluster_halo = da[ da["stationcode"].isin( stationcodes_cluster_halo )]        
     df_temp_cluster = da[ da["stationcode"].isin( stationcodes_cluster )]        
-    cluster_File = 'df_temp_cluster_' + str(i).zfill(2) + '.pkl'
-    cluster_halo_File = 'df_temp_cluster_halo_' + str(i).zfill(2) + '.pkl'
+    cluster_File = 'df_temp_cluster_' + str(i+1).zfill(2) + '.pkl'
+    cluster_halo_File = 'df_temp_cluster_halo_' + str(i+1).zfill(2) + '.pkl'
     df_temp_cluster.to_pickle( cluster_File, compression='bz2')
     df_temp_cluster_halo.to_pickle( cluster_halo_File, compression='bz2')
     
@@ -284,8 +317,8 @@ for i in range(nclusters):
     #cmap = cm.get_cmap('nipy_spectral', len(np.unique(labels)) ) # discrete colors
     cmap = cm.get_cmap('PiYG', len(np.unique(labels)) ) # discrete colors
     
-    figstr = 'global-cluster-halo' + '-' + str(i).zfill(2) + '.png'
-    titlestr = 'HCA: cluster ' + str(i).zfill(2) + ' + halo (n clusters=' + str( nclusters ) + ')'
+    figstr = 'global-cluster-halo' + '-' + str(i+1).zfill(2) + '.png'
+    titlestr = 'HCA: cluster ' + str(i+1).zfill(2) + ' + halo (n clusters=' + str( nclusters ) + ')'
                                                                                 
     fig, ax = plt.subplots(figsize=(15,10), subplot_kw=dict(projection=p))
     ax.stock_img()
@@ -306,15 +339,31 @@ for i in range(nclusters):
     gl.yformatter = LATITUDE_FORMATTER
     gl.xlabel_style = {'size': fontsize}
     gl.ylabel_style = {'size': fontsize}              
-    
+
     plt.scatter( x = df['lon'], y = df['lat'], marker='o', s=3, facecolors='none', edgecolors='grey', lw=0.5, alpha=1, transform=p, cmap=cmap, label='External: n=' + str( nstations - nstations_cluster - nstations_halo) )      
     plt.scatter( x = df_cluster['lon'], y = df_cluster['lat'], marker='o', s=3, facecolors='none', edgecolors='blue', lw=0.5, alpha=1, transform=p, cmap=cmap, label='Cluster: n=' + str(nstations_cluster) )      
     plt.scatter( x = df_halo['lon'], y = df_halo['lat'], marker='o', s=3, facecolors='none', edgecolors='red', lw=0.5, alpha=1, transform=p, cmap=cmap, label='Halo: n=' + str(nstations_halo) )      
-
+    
     plt.legend(loc='lower left', markerscale=3, facecolor='lightgrey', framealpha=0.5, fontsize=fontsize)        
     plt.title( titlestr, fontsize=fontsize )
     plt.savefig( figstr, dpi=600, bbox_inches='tight')
     plt.close('all')
+
+#------------------------------------------------------------------------------
+# SAVE: halo analysis counts
+#------------------------------------------------------------------------------
+
+#df = pd.DataFrame({}, index=np.arange( 1, nclusters+1 ))
+df = pd.DataFrame({})
+df.index = np.arange( 1, nclusters+1 )
+df['n_cluster'] = vec_cluster
+df['n_halo'] = vec_halo
+df['idx_Nmin'] = vec_idx_Nmin
+df['idx_Nmax'] = vec_idx_Nmax
+df['idx_Dlimit'] = vec_idx_Dlimit
+df['n_total'] = df['n_cluster'] + df['n_halo']
+
+df.to_csv( 'halo-analysis-counts.csv' )
 
 #------------------------------------------------------------------------------
 print('** END')
