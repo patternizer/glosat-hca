@@ -1,4 +1,6 @@
-![image](https://github.com/patternizer/glosat-hca/blob/main/global-clusters-dendrogram-04.png)
+![image](https://github.com/patternizer/glosat-hca/blob/main/global-clusters-map-40_73.png)
+![image](https://github.com/patternizer/glosat-hca/blob/main/global-cluster-halo-69.png)
+![image](https://github.com/patternizer/glosat-hca/blob/main/global-clusters-dendrogram-06.png)
 
 # glosat-hca
 

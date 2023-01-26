@@ -53,8 +53,8 @@ maxsize = 400
 nclusters = 40
 
 fontsize = 16 
-export_pkl = True
-plot_separate_clusters = True # ( default = False )
+export_pkl = False
+plot_separate_clusters = False # ( default = False )
 
 df_temp_file = 'DATA/df_temp_qc.pkl'
 	
@@ -361,7 +361,9 @@ plt.close('all')
 
 # PLOT: dendrogram of linkage matrix Y for levels [1,5]
 
-for i in range(1,6):
+fontsize = 10
+
+for i in range(1,7):
 
     nlevels=i
     
